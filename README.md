@@ -1,16 +1,18 @@
 
 # Covariance and Correlation - Lab
 
+## Introduction
+
 In this lab, we shall working towards calculating covariance and correlation for a given dataset in python. We shall use the formulas shown in previous lesson and verify our results with python libraries.
 
 ## Objectives
 
-You will be able to 
+You will be able to:
 * Calculate and and interpret correlation and covariance for given variables
 * Build density and scatter plots to visually identify the level of dependence between variables
 * Perform covariance and correlation using python and numpy 
 
-### Dataset
+## Dataset
 
 Included dataset (heightWeight.csv) includes 20 heights (inches) and weights(pounds). Yes, it is a particularly small dataset and will help us focus more on seeing covariance and correlation in action. At this point, you should be able to calculate the average height and average weight. You can also explain the medians, variances and standard deviations for this dataset.
 
@@ -30,24 +32,33 @@ Let's first load this dataset into pandas. Read the file "heightWeight.csv" and 
 ```python
 # Load the dataset into pandas and perform basic inspection
 
+import pandas as pd
+data =pd.read_csv('heightWeight.csv')
 
-# 20
-#    height  Weight
-# 0      68     165
-# 1      71     201
-# 2      61     140
-# 3      69     170
-# 4      71     192
-#           height      Weight
-# count  20.000000   20.000000
-# mean   66.850000  165.800000
-# std     5.112163   28.971129
-# min    58.000000  115.000000
-# 25%    63.250000  143.750000
-# 50%    68.500000  170.000000
-# 75%    71.000000  192.750000
-# max    74.000000  210.000000
+print (len(data))
+
+print(data.head())
+
+print (data.describe())
 ```
+
+    20
+       height  Weight
+    0      68     165
+    1      71     201
+    2      61     140
+    3      69     170
+    4      71     192
+              height      Weight
+    count  20.000000   20.000000
+    mean   66.850000  165.800000
+    std     5.112163   28.971129
+    min    58.000000  115.000000
+    25%    63.250000  143.750000
+    50%    68.500000  170.000000
+    75%    71.000000  192.750000
+    max    74.000000  210.000000
+
 
 ### Calculate covariance 
 
@@ -76,7 +87,17 @@ import numpy as np
 
 def mean_normalize(var):
 
-    pass
+    norm = [] # Vector for storing output values 
+    n = 0     # a counter to identify the position of next element in vector
+    mean = np.mean(var)
+    
+    # for each element in the vector, subtract from mean and add the result to norm
+    for i in var:
+        diff = var[n] - mean
+        norm.append(diff)
+        n = n + 1
+    
+    return norm
 
 mean_normalize([1,2,3,4,5]), mean_normalize([11,22,33,44,55])
 
@@ -86,7 +107,7 @@ mean_normalize([1,2,3,4,5]), mean_normalize([11,22,33,44,55])
 
 
 
-    (None, None)
+    ([-2.0, -1.0, 0.0, 1.0, 2.0], [-22.0, -11.0, 0.0, 11.0, 22.0])
 
 
 
@@ -96,11 +117,10 @@ Great so you see, our function maintains the variance of list elements and moves
 ```python
 # Visualize the height data distribution before and after mean normalization 
 
-```
-
-
-```python
-
+height = mean_normalize(data.height)
+import seaborn as sns
+sns.distplot(data.height)
+sns.distplot(height)
 ```
 
 
@@ -111,7 +131,7 @@ Great so you see, our function maintains the variance of list elements and moves
 
 
 
-![png](index_files/index_7_1.png)
+![png](index_files/index_6_1.png)
 
 
 So there you go, not much changes in the shape of the data. Try repeating above with weight. 
@@ -133,9 +153,17 @@ So lets write a function that will take two iterables and return their dot produ
 # Write a function to calculate the dot product of two iterables 
 
 def dot_product(x,y):
+    n = 0  # a counter pointing to the current element of vector(s)
+    prod_vec = [] # Initliaze an empty list to store the results 
     
-    
-    pass
+    # For all elements in the vectors, multiply and save results in prod_vec
+    for i in range(len(x)):
+        prod = x[i]* y[i]
+        prod_vec.append(prod)
+        n += 1
+        
+    dot_prod = np.sum(prod_vec)
+    return dot_prod
 
 a = [1,2,3]
 b = [4,5,6]
@@ -145,6 +173,13 @@ dot_product(a,b)
 #  32  calculated as (1*4 + 2*5 + 3*6)
 ```
 
+
+
+
+    32
+
+
+
 So we have the numerator of the formula sorted out. Let's finally write a function `covariance()` that will take height and weight lists we created earlier and return the covariance value using the functions we created earlier. 
 
 
@@ -153,21 +188,43 @@ So we have the numerator of the formula sorted out. Let's finally write a functi
 
 def covariance(var1, var2):
 
-    pass
+    # Formula for covariance is:
+    # [Sum (x_i - X)(y_i - Y)] / N-1 
+    
+    # Sanity Check : Check to see if both vectors are of same length
+    # Exit the function if variables have different lengths
 
-# Uncomment below to check your function
+    if len(var1) != len(var2):
+        return None 
+    else: 
+       
+        # Mean normalize both variables 
+        x = mean_normalize(var1)
+        y = mean_normalize(var2)
+        
+        # Take the dot product of mean normalized variables
+        result = dot_product(x,y)
 
-# covariance(data['height'], data['Weight'])
+        # divide the dot product by n-1    
+        return result /((len(var1)) -1)
+
+covariance(data['height'], data['Weight'])
 
 # 144.75789473684208
 ```
+
+
+
+
+    144.75789473684208
+
+
 
 Let's verify our results with pandas built in `dataFrame.cov()` method.
 
 
 ```python
-# uncomment to run
-# data.cov()
+data.cov()
 ```
 
 
@@ -217,11 +274,9 @@ Okay so covariance (as well as correlation) are usually shown in matrix form. th
 
 ```python
 # Plot a scatter graph between height and weight to visually inspect the relationship 
-```
 
-
-```python
-
+import matplotlib.pyplot as plt
+plt.scatter(data.height, data.Weight)
 ```
 
 
@@ -232,12 +287,12 @@ Okay so covariance (as well as correlation) are usually shown in matrix form. th
 
 
 
-![png](index_files/index_16_1.png)
+![png](index_files/index_14_1.png)
 
 
 So we can see there is quite a bit of positive relationship between the two, but a covariance value is a bit hard to interpret. So let's try calculating correlation. 
 
-### Calculate Correlation
+## Calculate Correlation
 
 Once again, heres the formula to calculate the correlation. 
 ![](cor.png)
@@ -250,12 +305,30 @@ lots of mean normalizations going on here. It shouldn't be too hard now to imple
 import math
 def correlation(var1,var2):
     
-    pass
+    if len(var1) != len(var2):
+        return None 
+    else: 
+       
+        mean_norm_var1 = mean_normalize(var1)
+        mean_norm_var2 = mean_normalize(var2)
+        
+        # Try the numpy way for calculating doc product
+        var1_dot_var2 = [a * b for a, b in list(zip(mean_norm_var1, mean_norm_var2))]
+        
+        var1_squared = [i * i for i in mean_norm_var1]
+        var2_squared = [i * i for i in mean_norm_var2]
+        
+        return np.round(sum(var1_dot_var2) / math.sqrt(sum(var1_squared) * sum(var2_squared)), 2)
 
-# correlation(data['height'], data['Weight'])
-
-# 0.98
+correlation(data['height'], data['Weight'])
 ```
+
+
+
+
+    0.98
+
+
 
 Wow, 0.98, thats very close to one. So that means height and weight are like TOTALLY dependent on each other. Well, only for this particular sample. And there is a takeaway in this. sample size plays a major rule in determining the nature of a variable and its relationship with other variables. the set of 20 records we have seem to correlate highly, but this might be different for a different set of samples. We shall talk about how to further test such a finding to either reject it , or confirm it as a FACT. 
 
@@ -263,8 +336,7 @@ As a last check , let's use pandas `dataframe.corr()` method to see how that wor
 
 
 ```python
-# uncomment to run
-# data.corr()
+data.corr()
 ```
 
 
@@ -313,4 +385,4 @@ Another matrix similar to above. And we see that a correlation of a variable to 
 
 ## Summary 
 
-In this lab we saw how to calculate the covariance and correlation between variables. We also looked at mean normalization and dot products which will be revisited later in the course. FInally we saw how to calculate these measures using pandas built in methods. 
+In this lab we saw how to calculate the covariance and correlation between variables. We also looked at mean normalization and dot products which will be revisited later in the course. Finally we saw how to calculate these measures using pandas built in methods. 
